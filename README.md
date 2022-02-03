@@ -10,4 +10,4 @@
 6. Bayesian classifier
 7. EM algorithm
 8. kNN_______________________________________________Code: knn.py
-9. Locally weighted regression algorithm_____________Code: regression.py
+9. Locally weighted regression algorithm_____________Code: regression.py Dataset: regression.csv
