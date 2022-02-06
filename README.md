@@ -2,7 +2,7 @@
 
 ## 18CSL76: Artificial Intelligence and Machine learning laboratory
 
--**A* implementation**
+-**A\* implementation**
   - Code: astar.py
   - Dataset: None
 2. AO* implementation________________________________Code: aostar.py
