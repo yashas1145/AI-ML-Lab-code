@@ -7,7 +7,7 @@
 3. Candidate elimination_____________________________Code: candiate.py Dataset: candidate.csv
 4. ID3_______________________________________________Code: id3.py Dataset: id3.csv
 5. ANN_______________________________________________Code: ann.py
-6. Bayesian classifier
+6. Bayesian classifier_______________________________Code: kmeans.py
 7. EM algorithm
 8. kNN_______________________________________________Code: knn.py
 9. Locally weighted regression algorithm_____________Code: regression.py Dataset: regression.csv
