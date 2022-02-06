@@ -1,6 +1,6 @@
-###AI-ML-Lab-code
+# AI-ML-Lab-code
 
-#18CSL76: Artificial Intelligence and Machine learning laboratory
+## 18CSL76: Artificial Intelligence and Machine learning laboratory
 
 1. A* implementation_________________________________Code: astar.py
 2. AO* implementation________________________________Code: aostar.py
