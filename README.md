@@ -1,12 +1,10 @@
-# AI-ML-Lab-code
-
-## 18CSL76: Artificial Intelligence and Machine learning laboratory
+# 18CSL76: Artificial Intelligence and Machine learning laboratory
 
 1.**A\* implementation**
   - Code: astar.py
   - Dataset: None
 
-2.**AO* implementation**
+2.**AO\* implementation**
   - Code: aostar.py
   - Dataset: None
 
