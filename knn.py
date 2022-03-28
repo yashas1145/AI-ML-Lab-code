@@ -11,5 +11,7 @@ kmc = knc(5)
 kmc.fit(xTr, yTr)
 yPr = kmc.predict(xT)
 
+for i in range(len(xT)):
+    print("Sample: {}. Actual label: {}. Predicted label: {}".format(xT[i], yT[i], yPr[i]))
 print(cm(yT, yPr))
 print(cr(yT, yPr))
