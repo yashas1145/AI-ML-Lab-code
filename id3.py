@@ -1,85 +1,73 @@
-import pandas as pd, math, numpy as np
+import pandas as pd, numpy as np, math
 
 data = pd.read_csv("id3.csv")
 feat = [i for i in data]
-feat.remove("answer")
+feat.remove('answer')
 
 class node:
-
     def __init__(self):
-        self.child = []
-        self.value = ""
-        self.isLeaf = False
-        self.pred = ""
+        self.child, self.isLeaf, self.value, self.pred = [], False, '', ''
 
-def entropy(ex):
+def entropy(x):
     p, n = 0.0, 0.0
-
-    for _,row in ex.iterrows():
-        if row["answer"] == "yes":
+    for _,i in x.iterrows():
+        if i['answer'] == 'yes':
             p += 1
         else:
             n += 1
-    
+
     if p == 0.0 or n == 0.0:
         return 0.0
-    else:
-        P = p/(p+n)
-        N = n/(p+n)
-        return -(P*math.log(P,2) + N*math.log(N,2))
 
-def infoGain(ex, attr):
-    unique = np.unique(ex[attr])
-    gain = entropy(ex)
+    P, N = (p/(p+n)), (n/(p+n))
+    return -(P*math.log(P,2) + N*math.log(N,2))
 
+def infoGain(x, attr):
+    unique = np.unique(x[attr])
+    gain = entropy(x)
     for i in unique:
-        subdata = ex[ex[attr] == i]
-        subEntropy = entropy(subdata)
-        gain -= float(len(subdata)) / float(len(ex)) * subEntropy
+        sData = x[x[attr] == i]
+        sEntro = entropy(sData)
+        gain -= float(len(sData))/float(len(x)) * sEntro
 
     return gain
 
-def id3(ex, attr):
-    root = node()
-    maxGain, maxFeat = 0, ""
-
-    for f in attr:
-        gain = infoGain(ex, f)
-        if gain > maxGain: 
-            maxGain, maxFeat = gain, f
-  
-    root.value = maxFeat
-    unique = np.unique(ex[maxFeat])
-
-    for i in unique:
-        subData = ex[ex[maxFeat] == i]
-        if entropy(subData) == 0.0:
-            new = node()
-            new.isLeaf = True
-            new.value = i
-            new.pred = np.unique(subData["answer"])
-            root.child.append(new)
-        else:
-            dummy = node()
-            dummy.value = i
-            newAttr = attr.copy()
-            newAttr.remove(maxFeat)
-            child = id3(subData, newAttr)
-            dummy.child.append(child)
-            root.child.append(dummy)
-
-    return root
-
-def display(root: node, d=0):
+def display(root:node, d=0):
     for i in range(d):
         print("\t", end="")
     print(root.value, end="")
 
     if root.isLeaf:
-        print(" -> ", root.pred)
-    
+        print("->", root.pred)
+
     for child in root.child:
         display(child, d+1)
 
-root = id3(data, feat)
-display(root)
+def id3(x, attr):
+    root, maxGain, maxFeat = node(), 0, ''
+    for feat in attr:
+        gain = infoGain(x, feat)
+        if gain > maxGain:
+            maxGain, maxFeat = gain, feat
+
+    root.value = maxFeat
+    unique = np.unique(x[maxFeat])
+
+    for i in unique:
+        sData = x[x[maxFeat] == i]
+        if entropy(sData) == 0.0:
+            new = node()
+            new.isLeaf, new.value, new.pred = True, i, np.unique(sData['answer'])
+            root.child.append(new)
+        else:
+            new = node()
+            new.value = i
+            newAttr = attr.copy()
+            newAttr.remove(maxFeat)
+            child = id3(sData, newAttr)
+            new.child.append(child)
+            root.child.append(new)
+
+    return root
+
+display(id3(data, feat))
