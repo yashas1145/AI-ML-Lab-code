@@ -1,92 +1,85 @@
-import math, csv
+import pandas as pd, math, numpy as np
 
-def load_csv(filename):
-    lines = csv.reader(open(filename, "r"));
-    dataset = list(lines)
-    headers = dataset.pop(0)
-    return dataset, headers
+data = pd.read_csv("id3.csv")
+feat = [i for i in data]
+feat.remove("answer")
 
-class Node:
-    def __init__(self, attribute):
-        self.attribute = attribute
-        self.children = []
-        self.answer = ""
-        
-def subtables(data, col, delete):
-    dic = {}
-    coldata = [ row[col] for row in data]
-    attr = list(set(coldata))
-    for k in attr:
-        dic[k] = []
-    for y in range(len(data)):
-        key = data[y][col]
-        if delete:
-            del data[y][col]
-        dic[key].append(data[y])
-    return attr, dic
+class node:
 
-def entropy(S):
-    attr = list(set(S))
-    if len(attr) == 1:
-        return 0
-    counts = [0,0]
-    for i in range(2):
-        counts[i] = sum( [1 for x in S if attr[i] == x] ) / (len(S) * 1.0)
-    sums = 0
-    for cnt in counts:
-        sums += -1 * cnt * math.log(cnt, 2)
-    return sums
+    def __init__(self):
+        self.child = []
+        self.value = ""
+        self.isLeaf = False
+        self.pred = ""
 
-def compute_gain(data, col):
-    attValues, dic = subtables(data, col, delete=False)
-    total_entropy = entropy([row[-1] for row in data])
-    for x in range(len(attValues)):
-        ratio = len(dic[attValues[x]]) / ( len(data) * 1.0)
-        entro = entropy([row[-1] for row in dic[attValues[x]]])
-        total_entropy -= ratio*entro
-    return total_entropy
+def entropy(ex):
+    p, n = 0.0, 0.0
 
-def build_tree(data, features):
-    lastcol = [row[-1] for row in data]
-    if (len(set(lastcol))) == 1: # If all samples have same labels return that label
-        node=Node("")
-        node.answer = lastcol[0]
-        return node
-    n = len(data[0])-1
-    gains = [compute_gain(data, col) for col in range(n) ]
-    split = gains.index(max(gains))
-    node = Node(features[split])
-    fea = features[:split] + features[split+1:]
-    attr, dic = subtables(data, split, delete=True)
-    for x in range(len(attr)):
-        child = build_tree(dic[attr[x]], fea)
-        node.children.append((attr[x], child))
-    return node
-
-def print_tree(node, level):
-    if node.answer != "":
-        print(" "*level, node.answer) # Displays leaf node yes/no
-        return
-    print(" "*level, node.attribute) # Displays attribute Name
-    for value, n in node.children:
-        print(" "*(level+1), value)
-        print_tree(n, level + 2)
+    for _,row in ex.iterrows():
+        if row["answer"] == "yes":
+            p += 1
+        else:
+            n += 1
     
-def classify(node,x_test,features):
-    if node.answer != "":
-        print(node.answer)
-        return
-    pos = features.index(node.attribute)
-    for value, n in node.children:
-        if x_test[pos]==value:
-            classify(n,x_test,features)
-            
-dataset, features = load_csv("id3.csv")
-node = build_tree(dataset, features)
-print_tree(node, 0)
+    if p == 0.0 or n == 0.0:
+        return 0.0
+    else:
+        P = p/(p+n)
+        N = n/(p+n)
+        return -(P*math.log(P,2) + N*math.log(N,2))
 
-testdata, features = load_csv("id3Test.csv")
-for xtest in testdata:
-    print("The test instance : ",xtest)
-    print("The predicted label : ", end="")
-    classify(node,xtest,features)
+def infoGain(ex, attr):
+    unique = np.unique(ex[attr])
+    gain = entropy(ex)
+
+    for i in unique:
+        subdata = ex[ex[attr] == i]
+        subEntropy = entropy(subdata)
+        gain -= float(len(subdata)) / float(len(ex)) * subEntropy
+
+    return gain
+
+def id3(ex, attr):
+    root = node()
+    maxGain, maxFeat = 0, ""
+
+    for f in attr:
+        gain = infoGain(ex, f)
+        if gain > maxGain: 
+            maxGain, maxFeat = gain, f
+  
+    root.value = maxFeat
+    unique = np.unique(ex[maxFeat])
+
+    for i in unique:
+        subData = ex[ex[maxFeat] == i]
+        if entropy(subData) == 0.0:
+            new = node()
+            new.isLeaf = True
+            new.value = i
+            new.pred = np.unique(subData["answer"])
+            root.child.append(new)
+        else:
+            dummy = node()
+            dummy.value = i
+            newAttr = attr.copy()
+            newAttr.remove(maxFeat)
+            child = id3(subData, newAttr)
+            dummy.child.append(child)
+            root.child.append(dummy)
+
+    return root
+
+def display(root: node, d=0):
+    for i in range(d):
+        print("\t", end="")
+    print(root.value, end="")
+
+    if root.isLeaf:
+        print(" -> ", root.pred)
+    
+    for child in root.child:
+        display(child, d+1)
+
+root = id3(data, feat)
+display(root)
