@@ -14,7 +14,7 @@
 
 4.**ID3**
   - Code: id3.py
-  - Dataset: id3.csv, id3Test.csv
+  - Dataset: id3.csv
 
 5.**ANN**
   - Code: ann.py
