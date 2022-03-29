@@ -1,88 +1,83 @@
 class graph:
+    def __init__(self, start):
+        self.g = {'A': [[('B', 1), ('C', 1)], [('D', 1)]], 'B': [[('G', 1)], [('H', 1)]], 'C': [[('J', 1)]], 'D': [[('E', 1), ('F', 1)]], 'G': [[('I', 1)]]}
+        self.h = {'A': 1, 'B': 6, 'C': 2, 'D': 12, 'E': 2, 'F': 1, 'G': 5, 'H': 7, 'I': 7, 'J': 1}
+        self.start, self.status, self.parent, self.soln = start, {}, {}, {}
 
-    def __init__(self, graph, hvList, start):
-        self.g = graph
-        self.h = hvList
-        self.start = start
+    def applyaostar(self):
+        self.aostar(self.start, False)
 
-        self.parent, self.status, self.soln = {}, {}, {}
+    def getNeighbor(self, n):
+        return self.g.get(n, '')
 
-    def applyAoStar(self):
-        self.aoStar(self.start, False)
+    def gethv(self, n):
+        return self.h.get(n, 0)
 
-    def getNeighbor(self, node):
-        return self.g.get(node, '')
+    def getstatus(self, n):
+        return self.status.get(n, 0)
 
-    def getStatus(self, node):
-        return self.status.get(node, 0)
+    def sethv(self, n, v):
+        self.h[n] = v
 
-    def setStatus(self, node, status):
-        self.status[node] = status
+    def setstatus(self, n, v):
+        self.status[n] = v
 
-    def gethv(self, node):
-        return self.h.get(node, 0)
-
-    def sethv(self, node, hv):
-        self.h[node] = hv
-
-    def printSolution(self):
-        print("Traverse the graph from {} node".format(self.start))
+    def display(self):
+        print("Start from {}".format(self.start))
         print(self.soln)
 
-    def computeCost(self, node):
-        minCost, costToChild = 0, {}
-        costToChild[minCost] = []
+    def cost(self, n):
+        mc, childCost = 0, {}   #mc: Minimum cost
+        childCost[mc] = []
         flag = True
 
-        for nodeTuple in self.getNeighbor(node):
-            cost, nodeList = 0, []
+        for nTuple in self.getNeighbor(n):
+            cost, nList = 0, []
+            for m,w in nTuple:
+                cost += self.gethv(m) + w
+                nList.append(m)
 
-            for m, weight in nodeTuple:
-                cost += self.gethv(m) + weight
-                nodeList.append(m)
-            
             if flag == True:
-                minCost = cost
-                costToChild[minCost] = nodeList
+                mc = cost
+                childCost[mc] = nList
                 flag = False
-            else:
-                if minCost > cost:
-                    minCost = cost
-                    costToChild[minCost] = nodeList
-        
-        return minCost, costToChild[minCost]
 
-    def aoStar(self, node, bt):
-        print("Heuristic values: ", self.h)
-        print("Solution graph: ", self.soln)
-        print("Processing node: ", node)
+            else:
+                if mc > cost:
+                    mc = cost
+                    childCost[mc] = nList
+
+        return mc, childCost[mc]
+
+    def aostar(self, n, bt):
+        print("Heuristic values: {}".format(self.h))
+        print("Traversal: {}".format(self.soln))
+        print("We are at node {}".format(n))
         print("-"*30)
 
-        if self.getStatus(node) >= 0:
-            minCost, chilNodeList = self.computeCost(node)
-            self.sethv(node, minCost)
-            self.setStatus(node, len(chilNodeList))
+        if self.getstatus(n) >= 0:
+            mc, child = self.cost(n)
+            self.setstatus(n, len(child))
+            self.sethv(n, mc)
+            solve = True
 
-            solved = True
-            for child in chilNodeList:
-                self.parent[child] = node
-                if self.getStatus(child) != -1: solved = False
-            
-            if solved == True:
-                self.setStatus(node, -1)
-                self.soln[node] = chilNodeList
+            for c in child:
+                self.parent[c] = n
+                if self.getstatus(c) != -1:
+                    solve = False
 
-            if node != self.start:
-                self.aoStar(self.parent[node], True)
+            if solve == True:
+                self.setstatus(n, -1)
+                self.soln[n] = child
+
+            if n != self.start:
+                self.aostar(self.parent[n], True)
 
             if bt == False:
-                for child in chilNodeList:
-                    self.setStatus(child, 0)
-                    self.aoStar(child, False)
+                for c in child:
+                    self.setstatus(c, 0)
+                    self.aostar(c, False)
 
-hv = {'A': 1, 'B': 6, 'C': 2, 'D': 12, 'E': 2, 'F': 1, 'G': 5, 'H': 7, 'I': 7, 'J': 1}
-g1 = {'A': [[('B', 1), ('C', 1)], [('D', 1)]], 'B': [[('G', 1)], [('H', 1)]], 'C': [[('J', 1)]], 'D': [[('E', 1), ('F', 1)]], 'G': [[('I', 1)]]}
-
-ao = graph(g1, hv, 'A')
-ao.applyAoStar()
-ao.printSolution()
+ao = graph('A')
+ao.applyaostar()
+ao.display()
