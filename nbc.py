@@ -1,95 +1,87 @@
-import csv, random, math
+import random, csv, math as m
 
 def loadcsv(file):
-    line = csv.reader(open(file, "r"))
-    data = list(line)
+    data = list(csv.reader(open(file, 'r')))
     for i in range(len(data)):
-        data[i] = [float(x) for x in data[i]]
+        data[i] = [float(j) for j in data[i]]
     return data
 
-def splitData(data, splitRatio):
-    trainSize, trainSet = int(len(data) * splitRatio), []
-    copy = list(data)
-    
-    while len(trainSet) < trainSize:
+def splitdata(data, sr):
+    trainset, trainsize, copy = [], int(len(data)*sr), list(data)
+    while len(trainset) < trainsize:
         index = random.randrange(len(copy))
-        trainSet.append(copy.pop(index))
-    return [trainSet, copy]
+        trainset.append(copy.pop(index))
+    return trainset, copy
 
-def splitClass(data):
-    seperate = {}
+def splitclass(data):
+    s = {}
     for i in range(len(data)):
-        vector = data[i]
-        if vector[-1] not in seperate:
-            seperate[vector[-1]] = []
-        seperate[vector[-1]].append(vector)
-    return seperate
+        v = data[i]
+        if v[-1] not in s:
+            s[v[-1]] = []
+        s[v[-1]].append(v)
+    return s
 
-def mean(number):
-    return sum(number)/float(len(number))
+def mean(n):
+    return sum(n)/float(len(n))
 
-def stdev(number):
-    avg = mean(number)
-    variance = sum([pow(x-avg, 2) for x in number])/float(len(number)-1)
-    return math.sqrt(variance)
+def stdev(n):
+    a = mean(n)
+    v = sum([(x-a)**2 for x in n])/float(len(n)-1)
+    return m.sqrt(v)
 
-def summarize(data):
-    summary = [(mean(attr), stdev(attr)) for attr in zip(*data)]
-    del summary[-1]
-    return summary
+def summary(data):
+    s = [(mean(i), stdev(i)) for i in zip(*data)]
+    del s[-1]
+    return s
 
-def summarizeByClass(data):
-    seperate = splitClass(data)
-    summary = {}
-    for classValue, instance in seperate.items():
-        summary[classValue] = summarize(instance)
-    return summary
+def summaryclass(data):
+    sep = splitclass(data)
+    s = {}
+    for i, j in sep.items():
+        s[i] = summary(j)
+    return s
 
-def calculateProbability(x, mean, stdev):
-    exp = math.exp(-(math.pow(x-mean, 2)/(2*math.pow(stdev,2))))
-    return (1/(math.sqrt(2*math.pi) * stdev)) * exp
+def probability(x, a, s):
+    x = m.exp((x-a)**2/(2*s**2))
+    return s * x * (1/m.sqrt(2*m.pi))
 
-def calculateClassProbability(summary, vector):
-    prob = {}
-    for classValue, classSummary in summary.items():
-        prob[classValue] = 1
-        for i in range(len(classSummary)):
-            mean, stdev = classSummary[i]
-            x = vector[i]
-            prob[classValue] *= calculateProbability(x, mean, stdev)
-        return prob
+def probabilityclass(s, v):
+    p = {}
+    for i, j in s.items():
+        p[i] = 1
+        for k in range(len(j)):
+            mean, stdev = j[k]
+            x = v[k]
+            p[i] *= probability(x, mean, stdev)
 
-def predict(summary, vector):
-    prob = calculateClassProbability(summary, vector)
-    bestLabel, bestProb = None, -1
-    for classValue, prob in prob.items():
-        if bestLabel is None or prob > bestProb:
-            bestProb = prob
-            bestLabel = classValue
-    return bestLabel
+        return p
 
-def getPrediction(summary, test):
-    pred = []
-    for i in range(len(test)):
-        result = predict(summary, test[i])
-        pred.append(result)
-    return pred
+def predict(s, v):
+    p = probabilityclass(s, v)
+    bl, bp = None, -1
+    for i, j in p.items():
+        if bl is None or j > bp:
+            bl, bp = i, j
+    return bl
 
-def getAccuracy(test, pred):
-    correct = 0
-    for i in range(len(test)):
-        if test[i][-1] == pred[i]:
-            correct += 1
-    return (correct/float(len(test))) * 100.0
+def getprediction(s, t):
+    p = []
+    for i in range(len(t)):
+        p.append(predict(s, t[i]))
+    return p
 
-def main():
-    data = loadcsv("nbc.csv")
-    trainSet, testSet = splitData(data, 0.67)
-    print("Split {} rows into train {} and test {} rows".format(len(data), len(trainSet), len(testSet)))
-    summary = summarizeByClass(trainSet)
-    pred = getPrediction(summary, testSet)
-    accuracy = getAccuracy(testSet, pred)
-    print("Accuracy of the classifier is: {}".format(accuracy))
+def getaccuracy(t, p):
+    c = 0
+    for i in range(len(t)):
+        if t[i][-1] == p[i]:
+            c += 1
+    return c * 100.0 / float(len(t))
 
-if __name__ == "__main__":
-    main()
+data = loadcsv('nbc.csv')
+train, test = splitdata(data, 0.67)
+print("Total: {} Train: {} Test: {}".format(len(data), len(train), len(test)))
+s = summaryclass(train)
+p = getprediction(s, test)
+a = getaccuracy(test, p)
+print("Accuracy: {}".format(a))
